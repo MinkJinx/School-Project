@@ -488,7 +488,7 @@ while q == 0:
         opponent_hp = pokemons[opponent_pokemon]["HP"]
         opponent_moves = pokemons[opponent_pokemon]["Moves"]
         opponent_model = pokemons[opponent_pokemon]["Model"]        
-        print("Your opponent is " + opponent_pokemon + " with " + str(opponent_hp) + " HP!\n")
+        print("Your opponent is " + opponent_pokemon + " with " + str(opponent_hp) + " HP!" + opponent_model)
 
         # Initialize cooldown trackers
         player_cooldowns = {move: 0 for move in player_moves}
