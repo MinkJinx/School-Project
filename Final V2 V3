@@ -1,0 +1,243 @@
+import tkinter as tk
+import random
+from tkinter import messagebox
+from tkinter import ttk
+import nltk
+from nltk.corpus import words
+
+
+# Main menu function that handles the initial menu
+def main_menu():
+    menu_window = tk.Tk()
+    menu_window.title("Main Menu")
+    menu_window.config(bg="#f1f1f1")
+
+    header_label = tk.Label(menu_window, text="Select a Game to Play", font=("Arial", 20), bg="#f1f1f1")
+    header_label.pack(pady=20)
+
+    number_game_button = tk.Button(menu_window, text="Number Guessing Game", font=("Arial", 14),
+                                   command=lambda: number_guessing_game(menu_window), width=20, height=2, bg="#4CAF50",
+                                   fg="white")
+    number_game_button.pack(pady=10)
+
+    word_game_button = tk.Button(menu_window, text="Wordle-Like Game", font=("Arial", 14),
+                                 command=lambda: word_guessing_game(menu_window), width=20, height=2, bg="#4CAF50",
+                                 fg="white")
+    word_game_button.pack(pady=10)
+
+    menu_window.mainloop()
+
+
+# Function for the Number Guessing Game
+def number_guessing_game(menu_window):
+    game_window = tk.Toplevel(menu_window)  # Create a new window (Toplevel)
+    game_window.title("Number Guessing Game")
+    game_window.config(bg="#f1f1f1")
+
+    # Initialize variables
+    min_range = 1
+    max_range = 100
+    score = 0
+    guess_limit = 10
+    number_to_guess = random.randint(min_range, max_range)
+
+    # Labels and widgets
+    instructions_label = tk.Label(game_window, text="Guess the number and see if you're Hot or Cold!",
+                                  font=("Arial", 16), bg="#f1f1f1")
+    instructions_label.pack(pady=20)
+
+    range_label = tk.Label(game_window, text=f"Guess a number between {min_range} and {max_range}", font=("Arial", 12),
+                           bg="#f1f1f1")
+    range_label.pack(pady=10)
+
+    guess_entry = tk.Entry(game_window, font=("Arial", 14), width=10, bg="lightyellow", borderwidth=2)
+    guess_entry.pack(pady=10)
+
+    guess_label = tk.Label(game_window, text=f"Guesses left: {guess_limit}", font=("Arial", 12), bg="#f1f1f1")
+    guess_label.pack(pady=10)
+
+    feedback_label = tk.Label(game_window, text="Enter your guess below!", font=("Arial", 14), bg="#f1f1f1")
+    feedback_label.pack(pady=20)
+
+    check_button = tk.Button(game_window, text="Check Guess", font=("Arial", 14),
+                             command=lambda: check_guess(), bg="#4CAF50", fg="white")
+    check_button.pack(pady=10)  # Moved above the progress bar
+
+    progress_bar = ttk.Progressbar(game_window, length=300, mode="determinate", maximum=100)
+    progress_bar.pack(pady=10)
+
+    score_label = tk.Label(game_window, text=f"Score: {score}", font=("Arial", 12), bg="#f1f1f1")
+    score_label.pack(pady=10)
+
+    # Game Over label (this will display blinking message)
+    game_over_label = tk.Label(game_window, text="", font=("Arial", 16), fg="red", bg="#f1f1f1")
+    game_over_label.pack(pady=30)
+
+    restart_button = tk.Button(game_window, text="Restart Game", font=("Arial", 14),
+                               command=lambda: generate_number(), bg="#ffcc00")
+    restart_button.pack(pady=10)
+
+    back_button = tk.Button(game_window, text="Back to Main Menu", font=("Arial", 14),
+                            command=game_window.destroy, bg="#ffcc00")
+    back_button.pack(pady=10)
+
+    # Function to handle number generation and game reset
+    def generate_number():
+        nonlocal number_to_guess, guess_limit, score
+        number_to_guess = random.randint(min_range, max_range)
+        guess_limit = 10
+        range_label.config(text=f"Guess a number between {min_range} and {max_range}")
+        feedback_label.config(text="Enter your guess below!", fg="black")
+        progress_bar.config(value=0)
+        guess_label.config(text=f"Guesses left: {guess_limit}")
+        score_label.config(text=f"Score: {score}")
+        game_over_label.config(text="")
+
+    # Function to handle guessing logic
+    def check_guess():
+        nonlocal guess_limit, score, number_to_guess
+        try:
+            guess = int(guess_entry.get())  # Convert input to an integer
+            if guess < min_range or guess > max_range:
+                feedback_label.config(text=f"Please guess a number between {min_range} and {max_range}.", fg="red")
+                return
+
+            guess_limit -= 1
+            guess_label.config(text=f"Guesses left: {guess_limit}")
+
+            # Check if the guess is correct
+            if guess == number_to_guess:
+                score += 1
+                feedback_label.config(text="Congratulations! You guessed it right!", fg="green")
+                score_label.config(text=f"Score: {score}")
+                progress_bar.config(value=100)
+                return  # Exit the function as the game is won
+
+            # Provide "hot" or "cold" feedback
+            difference = abs(number_to_guess - guess)
+            if difference <= 5:
+                feedback_label.config(text="Hot! You're very close!", fg="orange")
+            elif difference <= 15:
+                feedback_label.config(text="Warm! Getting closer!", fg="blue")
+            else:
+                feedback_label.config(text="Cold! Far away.", fg="black")
+
+            # Update progress bar based on proximity
+            progress = max(0, 100 - (difference / max_range) * 100)
+            progress_bar.config(value=progress)
+
+            # Check if the game is over
+            if guess_limit == 0:
+                feedback_label.config(text=f"Game Over! The correct number was {number_to_guess}.", fg="red")
+                game_over_label.config(text="GAME OVER", fg="red")
+                game_window.after(500, lambda: game_over_label.config(text=""))
+                game_window.after(1000, lambda: game_over_label.config(text="GAME OVER"))
+        except ValueError:
+            feedback_label.config(text="Invalid input! Please enter a number.", fg="red")
+
+    # Start the game by generating a number
+    generate_number(range_label, feedback_label, guess_label, progress_bar, score_label)
+
+
+# Function for the Wordle-Like Game (Word Guessing Game)
+def word_guessing_game(menu_window):
+    game_window = tk.Toplevel(menu_window)
+    game_window.title("Wordle-Like Game")
+    game_window.config(bg="#f1f1f1")
+
+    # Initialize the variables here
+    row_index = 0  # Declare row_index here and initialize it
+
+    # Filter all 5-letter words from nltk's corpus
+    word_list = [word.lower() for word in words.words() if len(word) == 5 and word.isalpha()]
+    target_word = random.choice(word_list)
+    attempts = 6
+
+    # Labels and widgets
+    instructions_label = tk.Label(game_window, text="Guess the 5-letter word. You have 6 attempts.", font=("Arial", 14),
+                                  bg="#f1f1f1")
+    instructions_label.pack(pady=10)
+
+    attempts_label = tk.Label(game_window, text=f"Attempts left: {attempts}", font=("Arial", 12), bg="#f1f1f1")
+    attempts_label.pack()
+
+    entry = tk.Entry(game_window, font=("Arial", 18), width=10, bd=2, relief="solid", justify="center", bg="#e8e8e8")
+    entry.pack(pady=20)
+
+    submit_button = tk.Button(game_window, text="Submit Guess", font=("Arial", 14),
+                              command=lambda: check_word_guess(entry, game_window, target_word, attempts_label),
+                              bg="#4CAF50", fg="white")
+    submit_button.pack(pady=10)
+
+    result_label = tk.Label(game_window, text="", font=("Arial", 14), bg="#f1f1f1")
+    result_label.pack(pady=10)
+
+    grid_frame = tk.Frame(game_window)
+    grid_frame.pack(pady=10)
+
+    grid_buttons = []
+    for i in range(6):
+        row_buttons = []
+        for j in range(5):
+            button = tk.Button(grid_frame, width=5, height=3, bg="#e0e0e0", font=("Arial", 14), relief="solid")
+            button.grid(row=i, column=j, padx=5, pady=5)
+            row_buttons.append(button)
+        grid_buttons.append(row_buttons)
+
+    # Function to check word guesses
+    def check_word_guess(entry, game_window, target_word, attempts_label):
+        guess = entry.get().lower()
+
+        if len(guess) != 5:
+            result_label.config(text="Please enter exactly 5 letters!", fg="red")
+            return
+
+        if not guess.isalpha():
+            result_label.config(text="Only letters are allowed!", fg="red")
+            return
+
+        if guess not in word_list:
+            result_label.config(text="Word not in the dictionary!", fg="red")
+            return
+
+        feedback = []
+
+        for i in range(len(guess)):
+            if guess[i] == target_word[i]:
+                feedback.append("green")
+            elif guess[i] in target_word:
+                feedback.append("yellow")
+            else:
+                feedback.append("gray")
+
+        update_feedback(feedback)
+
+        nonlocal attempts
+        attempts -= 1
+        attempts_label.config(text=f"Attempts left: {attempts}")
+
+        if guess == target_word:
+            result_label.config(text=f"Congratulations! You've guessed the word: {target_word}", fg="green")
+            disable_input()
+        elif attempts == 0:
+            result_label.config(text=f"Game Over! The word was: {target_word}", fg="red")
+            disable_input()
+
+    def update_feedback(feedback):
+        nonlocal row_index
+        for i in range(5):
+            color = feedback[i]
+            grid_buttons[row_index][i].config(bg=color)
+
+        row_index += 1
+
+    def disable_input():
+        entry.config(state="disabled")
+        submit_button.config(state="disabled")
+
+    back_button = tk.Button(game_window, text="Back to Main Menu", font=("Arial", 14), command=game_window.destroy,
+                            bg="#ffcc00")
+    back_button.pack(pady=20)
+
+# Start the main menu
+main_menu()
